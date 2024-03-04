@@ -4,14 +4,15 @@ use solana_sdk::pubkey::Pubkey;
 #[derive(serde::Deserialize)]
 struct Env {
     rpc_url: url::Url,
-    wallet_pubkey: String,
-    mint_account_pubkey: String,
+    receiver_pubkey: String,
+    mint_pubkey: String,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    dotenv::dotenv().ok();
     let env = envy::from_env::<Env>()?;
-    let target: Pubkey = env.wallet_pubkey.parse()?;
-    let mint_id: Pubkey = env.mint_account_pubkey.parse()?;
+    let target: Pubkey = env.receiver_pubkey.parse()?;
+    let mint_id: Pubkey = env.mint_pubkey.parse()?;
 
     let rpc = RpcClient::new(env.rpc_url.to_string());
 

@@ -15,7 +15,11 @@ struct Env {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let env = envy::from_env::<Env>()?;
+    dotenv::dotenv().ok();
+    let env = envy::from_env::<Env>().expect("配置环境变量失败");
+
+    // let env = envy::from_env::<Env>()?;
+    println!(" env is {:?}, ", &env.rpc_url);
     let signer_wallet = Keypair::from_base58_string(&env.signer_keypair);
     let mint_account = Keypair::from_base58_string(&env.mint_keypair);
     let client = RpcClient::new(env.rpc_url.to_string());
@@ -49,6 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &[&mint_account, &signer_wallet],
         recent_blockhash,
     );
+    println!(" Message {:?} ",&transaction.message_data()); 
 
     client.send_and_confirm_transaction_with_spinner(&transaction)?;
 

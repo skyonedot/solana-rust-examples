@@ -10,22 +10,24 @@ use solana_sdk::{
 struct Env {
     rpc_url: url::Url,
     signer_keypair: String,
-    mint_account_pubkey: String,
+    mint_pubkey: String,
     receiver_pubkey: String,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    dotenv::dotenv().ok();
     let env = envy::from_env::<Env>()?;
     let signer_wallet = Keypair::from_base58_string(&env.signer_keypair);
     let client = RpcClient::new(env.rpc_url.to_string());
     let receiver_pubkey: Pubkey = env.receiver_pubkey.parse()?;
-    let mint_account_pubkey: Pubkey = env.mint_account_pubkey.parse()?;
+    let mint_pubkey: Pubkey = env.mint_pubkey.parse()?;
 
+    // let amount = 10_000 * 1e9 as u64;
     let amount = 10_000;
 
     let assoc = spl_associated_token_account::get_associated_token_address(
         &receiver_pubkey,
-        &mint_account_pubkey,
+        &mint_pubkey,
     );
 
     #[allow(deprecated)]
@@ -33,12 +35,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let assoc_instruction = spl_associated_token_account::create_associated_token_account(
         &signer_wallet.pubkey(),
         &receiver_pubkey,
-        &mint_account_pubkey,
+        &mint_pubkey,
     );
 
     let mint_to_instruction: Instruction = spl_token::instruction::mint_to(
         &spl_token::ID,
-        &mint_account_pubkey,
+        &mint_pubkey,
         &assoc,
         &signer_wallet.pubkey(),
         &[&signer_wallet.pubkey()],
