@@ -15,22 +15,26 @@ use bs58;
 #[derive(serde::Deserialize)]
 struct Env {
     rpc_url: url::Url,
-    signer_keypair: String,
+    send_tx_keypair: String,
     // mint_keypair: String,
     rpc_url_mainnet: String,
-    send_keypair_mainnet: String
+    send_keypair_mainnet: String,
+    data: String,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv::dotenv().ok();
     let env = envy::from_env::<Env>().expect("配置环境变量失败");
+    let send_keyPair = Keypair::from_base58_string(&env.send_tx_keypair);
     let client = RpcClient::new(env.rpc_url_mainnet.to_string());
-    let send_tx_account = Keypair::from_base58_string(&env.send_keypair_mainnet);
+    // let send_tx_account = Keypair::from_base58_string(&env.send_keypair_mainnet);
     // let 
-    let data = "31s9owhAPGMTXqJvmEmv69FdUNH5pPMP6cVb3CUa6Tde2fXVNWncPx7hMD6cDXvJrNSyF9pc1vKqgvV7S4PB1gvJrCczDCNsTsSbHLjnvUWUPcHss3bsjZ5EQ9Xx1fT1NdQi3aMa4TKvz3iZgP5GRTisZ5KcGjZS34MqPqEaMGEFf8STpWXD9QF6P8QapM4jU9eawjAf8Mvsqb9nQNrp7qdyKyk2AKoeia52DLsBNGei7ARhzJdBomLoPsp7NLfQrpEwupUf8Ms6cDJnz9KgSDwtKhvx9PfXdbSGKuBgunL6pKMXgDGMhcXdcWkfjL1N6aXtzXredTF6RSneBnv59MFsnz7QQnHWbpNr7mv5rcsAHsW7qKUnjBqqfgioCRDyFzKeJTCvqtoUYXW7jgAej3EFxDzUfxLC1f7HQxdSUQzEwVj8sQHMXN3thYSDZkqZw4QoQuUL6csU3nPoVrVjkNf1Xzrtq1dYnAB7o21827CpN7GLSZPQywFmit3bYfk4SYcdf8vXf3hMcvHUNw5u44jtUoupT2i1cdbjcXvoS7c16dfK1qKxtcRy6iXqoGQ7F7KYveEqc9GcuEzEhGijV3UEFX9oA7WkuLh1JVFuXcrqMw3CBsrhApM8VKuVEwj76ofqazJtrr4aprFWemJ85h1QwrD3L1";
+    //get the data
+    let data = &env.data  ;
     let data_a = bs58::decode(data).into_vec()?;
     let transaction: VersionedTransaction = bincode::deserialize(&data_a)?;
-    let result = client.send_and_confirm_transaction_with_spinner(&transaction);
+    let tx = VersionedTransaction::try_new( transaction.message , &[&send_keyPair]).unwrap();
+    let result = client.send_and_confirm_transaction_with_spinner(&tx);
     println!("{:?}",result );
     // bincode::deserialize(&data_a.as_slice()).unwrap();
     // Message::deserialize(data_a);
